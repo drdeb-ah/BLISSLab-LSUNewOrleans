@@ -3,22 +3,94 @@ layout: default
 title: Home
 ---
 
+<style>
+  .nav { display: flex; gap: 1.5rem; margin-bottom: 2rem; }
+  .nav a { text-decoration: none; font-weight: bold; }
+  .section { margin: 3rem 0; padding: 1.5rem; border: 1px solid #ddd; border-radius: 12px; }
+  .section .icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  #guestbook { list-style: none; padding: 0; margin-top: 1rem; }
+  #guestbook li { padding: 0.5rem 0; border-bottom: 1px dashed #ddd; }
+  #guestbook small { color: #888; margin-left: 0.5rem; }
+  .flying-star {
+    position: fixed; top: 10%; left: -50px; font-size: 2.5rem; color: gold;
+    pointer-events: none; z-index: 9999; animation: fly 1.8s ease-in forwards;
+  }
+  @keyframes fly {
+    to { transform: translate(110vw, 50vh) rotate(360deg); opacity: 0; }
+  }
+</style>
+
+<nav class="nav">
+  <a href="{{ '/' | relative_url }}">Home</a>
+  <a href="{{ '/research.html' | relative_url }}">Research Projects</a>
+</nav>
+
 <h1>Welcome to {{ site.title }}</h1>
 <p>{{ site.description }}</p>
 
+<div class="section">
+  <div class="icon">★</div>
+  <p>Share a little sprinkle of the "good stuff": click to send a shooting star to everyone on the page.</p>
+  <button id="star-btn">shooting star!</button>
+</div>
+
+<div class="section">
+  <div class="icon">★★★</div>
+  <p>Before you go, don't forget to say hello! Sign our guestbook.</p>
+  <input id="guestbookValue" placeholder="say hi..." maxlength="200" />
+  <button id="guestbook-btn">say hi</button>
+  <ul id="guestbook"></ul>
+</div>
+
 <script type="module">
   import { playhtml } from "https://unpkg.com/playhtml";
-  playhtml.init();
-</script>
- <div id="shootingStar">★</div>
 
-    <div>
-      Share a little sprinkle of the "good stuff" --> click this to trigger a shooting star for everyone.
-      <button onclick="shootStar()">shooting star!</button>
-    </div>
- <div id="Guest Book">★★★</div>
-  <div>Before you go, don't forget to say Hello! Sign our a custom guestbook!</div>
-    <input id="guestbookValue" placeholder="say hi..."/>
-    <button onclick="addGuestbook()">say hi</button>
-    <ul id="guestbook"></ul>
-  </div>
+  // Shooting star: everyone currently on the page sees it
+  function showStar() {
+    const star = document.createElement("span");
+    star.className = "flying-star";
+    star.textContent = "★";
+    document.body.appendChild(star);
+    setTimeout(() => star.remove(), 2000);
+  }
+
+  playhtml.init({
+    events: {
+      shootingStar: { type: "shooting-star", onEvent: showStar },
+    },
+  });
+
+  document.getElementById("star-btn").addEventListener("click", () => {
+    playhtml.dispatchPlayEvent({ type: "shooting-star" });
+  });
+
+  // Guestbook: saved and shared with every visitor
+  const guestbook = playhtml.createPageData("guestbook", []);
+  const list = document.getElementById("guestbook");
+  const input = document.getElementById("guestbookValue");
+
+  function render(entries) {
+    list.innerHTML = "";
+    [...entries].reverse().forEach((e) => {
+      const li = document.createElement("li");
+      li.textContent = e.msg;            // textContent keeps visitors from injecting HTML
+      const time = document.createElement("small");
+      time.textContent = new Date(e.time).toLocaleDateString();
+      li.appendChild(time);
+      list.appendChild(li);
+    });
+  }
+
+  function addEntry() {
+    const msg = input.value.trim();
+    if (!msg) return;
+    guestbook.setData((draft) => { draft.push({ msg, time: Date.now() }); });
+    input.value = "";
+  }
+
+  document.getElementById("guestbook-btn").addEventListener("click", addEntry);
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") addEntry(); });
+
+  guestbook.onUpdate(render);
+  render(guestbook.getData());
+</script>
