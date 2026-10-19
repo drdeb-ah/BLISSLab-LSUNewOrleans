@@ -41,85 +41,8 @@ title: Home
 
 <p id="ph-status" style="color:#888; font-size:0.85rem;">connecting…</p>
 
-<script type="module">
-  import { playhtml } from "https://unpkg.com/playhtml";
-
-  const status = document.getElementById("ph-status");
-
-  // Shooting star animation
-  function showStar() {
-    const star = document.createElement("span");
-    star.className = "flying-star";
-    star.textContent = "★";
-    document.body.appendChild(star);
-    setTimeout(() => star.remove(), 2000);
-  }
-
-  try {
-    // Wait until playhtml is fully connected before using it
-    await playhtml.init({
-      room: "blisslab-home",   // same guestbook whether people visit / or /index.html
-      events: {
-        shootingStar: { type: "shooting-star", onEvent: showStar },
-      },
-      onError: () => { status.textContent = "couldn't connect to playhtml"; },
-    });
-    status.textContent = "";
-
-    // Shooting star button
-    document.getElementById("star-btn").addEventListener("click", () => {
-      playhtml.dispatchPlayEvent({ type: "shooting-star" });
-    });
-
-</script>
-
-    <div id="shootingStar">★</div>
-
-    <div>
-      Here's a playhtml event. It triggers a shooting star for everyone.
-      <button onclick="shootStar()">shooting star!</button>
-    </div>
-
-    <div>here's a custom guestbook made with can-mirror</div>
-    <input id="guestbookValue" placeholder="say hi..."/>
-    <button onclick="addGuestbook()">say hi</button>
-    <ul id="guestbook"></ul>
-
-    <div>here's a reaction button — everyone sees the count</div>
-    <div id="reactionBtn" can-play></div>
-  </div>
-
   <script type="module">
     import { playhtml, html } from "playhtml";
-
-    // Register the reaction button with a view. register() can run before OR
-    // after init() — there's no ordering rule. The view renders from the
-    // shared `data`; the @click handler writes it and the view re-renders.
-    playhtml.register("reactionBtn", {
-      defaultData: { count: 0 },
-      view: ({ data, setData }) => {
-        const hasReacted = Boolean(localStorage.getItem("reacted-reaction"));
-        const react = () => {
-          if (localStorage.getItem("reacted-reaction")) {
-            setData((d) => { d.count -= 1; });
-            localStorage.removeItem("reacted-reaction");
-          } else {
-            setData((d) => { d.count += 1; });
-            localStorage.setItem("reacted-reaction", "true");
-          }
-        };
-        return html`
-          <button
-            class="reaction ${hasReacted ? "reacted" : ""}"
-            style="font-size: 24px; padding: 10px 20px; margin: 10px 0;"
-            @click=${react}
-          >
-            react ${data.count}
-          </button>
-        `;
-      },
-    });
-
     await playhtml.init({
       developmentMode: true,
       cursors: { enabled: true, room: "page" },
