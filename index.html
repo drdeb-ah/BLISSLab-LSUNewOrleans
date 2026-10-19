@@ -47,10 +47,14 @@ title: Home
   <p>Look at this empty box, filled with possiblity...</p>
 </div>
 
+<p id="ph-status" style="color:#888; font-size:0.85rem;">connecting…</p>
+
 <script type="module">
   import { playhtml } from "https://unpkg.com/playhtml";
 
-  // Shooting star: everyone currently on the page sees it
+  const status = document.getElementById("ph-status");
+
+  // Shooting star animation
   function showStar() {
     const star = document.createElement("span");
     star.className = "flying-star";
@@ -59,43 +63,53 @@ title: Home
     setTimeout(() => star.remove(), 2000);
   }
 
-  playhtml.init({
-    events: {
-      shootingStar: { type: "shooting-star", onEvent: showStar },
-    },
-  });
-
-  document.getElementById("star-btn").addEventListener("click", () => {
-    playhtml.dispatchPlayEvent({ type: "shooting-star" });
-  });
-
-  // Guestbook: saved and shared with every visitor
-  const guestbook = playhtml.createPageData("guestbook", []);
-  const list = document.getElementById("guestbook");
-  const input = document.getElementById("guestbookValue");
-
-  function render(entries) {
-    list.innerHTML = "";
-    [...entries].reverse().forEach((e) => {
-      const li = document.createElement("li");
-      li.textContent = e.msg;            // textContent keeps visitors from injecting HTML
-      const time = document.createElement("small");
-      time.textContent = new Date(e.time).toLocaleDateString();
-      li.appendChild(time);
-      list.appendChild(li);
+  try {
+    // Wait until playhtml is fully connected before using it
+    await playhtml.init({
+      room: "blisslab-home",   // same guestbook whether people visit / or /index.html
+      events: {
+        shootingStar: { type: "shooting-star", onEvent: showStar },
+      },
+      onError: () => { status.textContent = "couldn't connect to playhtml"; },
     });
+    status.textContent = "";
+
+    // Shooting star button
+    document.getElementById("star-btn").addEventListener("click", () => {
+      playhtml.dispatchPlayEvent({ type: "shooting-star" });
+    });
+
+    // Guestbook
+    const guestbook = playhtml.createPageData("guestbook", []);
+    const list = document.getElementById("guestbook");
+    const input = document.getElementById("guestbookValue");
+
+    function render(entries) {
+      list.innerHTML = "";
+      [...(entries || [])].reverse().forEach((e) => {
+        const li = document.createElement("li");
+        li.textContent = e.msg;
+        const time = document.createElement("small");
+        time.textContent = new Date(e.time).toLocaleDateString();
+        li.appendChild(time);
+        list.appendChild(li);
+      });
+    }
+
+    function addEntry() {
+      const msg = input.value.trim();
+      if (!msg) return;
+      guestbook.setData((draft) => { draft.push({ msg, time: Date.now() }); });
+      input.value = "";
+    }
+
+    document.getElementById("guestbook-btn").addEventListener("click", addEntry);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") addEntry(); });
+
+    guestbook.onUpdate(render);
+    render(guestbook.getData());
+  } catch (err) {
+    status.textContent = "playhtml error: " + err.message;
+    console.error(err);
   }
-
-  function addEntry() {
-    const msg = input.value.trim();
-    if (!msg) return;
-    guestbook.setData((draft) => { draft.push({ msg, time: Date.now() }); });
-    input.value = "";
-  }
-
-  document.getElementById("guestbook-btn").addEventListener("click", addEntry);
-  input.addEventListener("keydown", (e) => { if (e.key === "Enter") addEntry(); });
-
-  guestbook.onUpdate(render);
-  render(guestbook.getData());
 </script>
