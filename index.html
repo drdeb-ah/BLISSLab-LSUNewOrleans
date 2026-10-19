@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Welcome to Dr. Deb's BLISS LAB at LSU New Orleans</title>
+</head>
+<body>
+
+  <!-- Anyone can drag this; its position is saved and shared with everyone -->
+  <div id="couch" can-move style="font-size: 80px">🛋</div>
+
+  <!-- Click to switch on/off for everyone -->
+  <div id="lamp" can-toggle style="font-size: 60px">💡</div>
+
+  <!-- Drag to rotate -->
+  <div id="star" can-spin style="font-size: 60px">⭐</div>
+
+  <script type="module">
+    import { playhtml } from "https://unpkg.com/playhtml";
+    playhtml.init();
+  </script>
+</body>
+</html>
