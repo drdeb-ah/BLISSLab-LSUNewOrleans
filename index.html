@@ -35,14 +35,6 @@ title: Home
 </div>
 
 <div class="section">
-  <div class="icon"> ✉︎ ✉︎ </div>
-  <p>Before you go, don't forget to say hello! Sign our guestbook.</p>
-  <input id="guestbookValue" placeholder="say hi..." maxlength="200" />
-  <button id="guestbook-btn">say hi</button>
-  <ul id="guestbook"></ul>
-</div>
-
-<div class="section">
   <div class="icon">⚓︎ ⌚︎</div>
   <p>Look at this empty box, filled with possiblity...</p>
 </div>
@@ -79,37 +71,78 @@ title: Home
       playhtml.dispatchPlayEvent({ type: "shooting-star" });
     });
 
-    // Guestbook
-    const guestbook = playhtml.createPageData("guestbook", []);
-    const list = document.getElementById("guestbook");
-    const input = document.getElementById("guestbookValue");
-
-    function render(entries) {
-      list.innerHTML = "";
-      [...(entries || [])].reverse().forEach((e) => {
-        const li = document.createElement("li");
-        li.textContent = e.msg;
-        const time = document.createElement("small");
-        time.textContent = new Date(e.time).toLocaleDateString();
-        li.appendChild(time);
-        list.appendChild(li);
-      });
-    }
-
-    function addEntry() {
-      const msg = input.value.trim();
-      if (!msg) return;
-      guestbook.setData((draft) => { draft.push({ msg, time: Date.now() }); });
-      input.value = "";
-    }
-
-    document.getElementById("guestbook-btn").addEventListener("click", addEntry);
-    input.addEventListener("keydown", (e) => { if (e.key === "Enter") addEntry(); });
-
-    guestbook.onUpdate(render);
-    render(guestbook.getData());
-  } catch (err) {
-    status.textContent = "playhtml error: " + err.message;
-    console.error(err);
-  }
 </script>
+
+    <div id="shootingStar">★</div>
+
+    <div>
+      Here's a playhtml event. It triggers a shooting star for everyone.
+      <button onclick="shootStar()">shooting star!</button>
+    </div>
+
+    <div>here's a custom guestbook made with can-mirror</div>
+    <input id="guestbookValue" placeholder="say hi..."/>
+    <button onclick="addGuestbook()">say hi</button>
+    <ul id="guestbook"></ul>
+
+    <div>here's a reaction button — everyone sees the count</div>
+    <div id="reactionBtn" can-play></div>
+  </div>
+
+  <script type="module">
+    import { playhtml, html } from "playhtml";
+
+    // Register the reaction button with a view. register() can run before OR
+    // after init() — there's no ordering rule. The view renders from the
+    // shared `data`; the @click handler writes it and the view re-renders.
+    playhtml.register("reactionBtn", {
+      defaultData: { count: 0 },
+      view: ({ data, setData }) => {
+        const hasReacted = Boolean(localStorage.getItem("reacted-reaction"));
+        const react = () => {
+          if (localStorage.getItem("reacted-reaction")) {
+            setData((d) => { d.count -= 1; });
+            localStorage.removeItem("reacted-reaction");
+          } else {
+            setData((d) => { d.count += 1; });
+            localStorage.setItem("reacted-reaction", "true");
+          }
+        };
+        return html`
+          <button
+            class="reaction ${hasReacted ? "reacted" : ""}"
+            style="font-size: 24px; padding: 10px 20px; margin: 10px 0;"
+            @click=${react}
+          >
+            react ${data.count}
+          </button>
+        `;
+      },
+    });
+
+    await playhtml.init({
+      developmentMode: true,
+      cursors: { enabled: true, room: "page" },
+    });
+
+    window.playhtml = playhtml;
+
+    function shootStar() {
+      window.playhtml.dispatchPlayEvent({ type: "shootingStar" });
+    }
+    window.shootStar = shootStar;
+
+    window.playhtml.registerPlayEventListener("shootingStar", {
+      onEvent: () => {
+        document.getElementById("shootingStar").animate(
+          [
+            { transform: "translate(100vw, 100vh) rotate(0deg)" },
+            { transform: "translate(-10vw, -10vh) rotate(360deg)" },
+          ],
+          { duration: 2000, fill: "forwards" }
+        );
+      },
+    });
+  </script>
+</body>
+</html>
