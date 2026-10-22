@@ -1,3 +1,2 @@
-# BLISSLab-LSUNewOrleans
-
-You've made it!
+# BLISSLab @LSUNewOrleans
+## You've made it!
