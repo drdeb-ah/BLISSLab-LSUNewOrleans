@@ -1,6 +1,3 @@
-
-minimal_mistakes_skin    : "default" # "air", "aqua", "contrast", "dark", "dirt", "neon", "mint", "plum", "sunrise"
-
 # Site Settings
 locale                   : "en-US"
 title                    : " "
